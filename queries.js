@@ -179,5 +179,5 @@ async function promptAddEmployee() {
     });
 }
 
-module.exports = DatabaseQueries;
+export default DatabaseQueries;
   

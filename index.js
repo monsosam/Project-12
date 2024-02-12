@@ -1,21 +1,14 @@
 // Import required modules
-const inquirer = require('inquirer');
-const connection = require('../config/connection'); // Adjust the path as necessary
-const DatabaseQueries = require('./queries');
+import { prompt } from 'inquirer';
+import connection, { end, query } from '../config/connection'; // Adjust the path as necessary
+import DatabaseQueries from './queries';
 
 // Create an instance of the DatabaseQueries class
 const dbQueries = new DatabaseQueries(connection);
 
-
-
-
-
-
-  
-
 // Function to show the main menu
 function showMainMenu() {
-  inquirer.prompt([
+  prompt([
     {
       type: 'list',
       name: 'action',
@@ -56,7 +49,7 @@ function showMainMenu() {
         break;
       case 'Exit':
         console.log('Exiting application...');
-        connection.end();
+        end();
         break;
       default:
         console.log('Invalid action!');
@@ -71,7 +64,7 @@ function showMainMenu() {
 async function viewAllDepartments() {
     try {
         // Execute the query to get all departments
-        const [departments] = await connection.query('SELECT * FROM department ORDER BY id ASC');
+        const [departments] = await query('SELECT * FROM department ORDER BY id ASC');
         console.table(departments); // Display the results in a table format
         
         // Call showMainMenu again to return to the main menu
