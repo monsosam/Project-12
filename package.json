@@ -1,0 +1,24 @@
+{
+  "name": "project-12",
+  "version": "1.0.0",
+  "description": "evelopers frequently have to create interfaces that allow non-developers to easily view and interact with information stored in databases. These interfaces are called **Content** **Management** **Systems**. Your assignment this week is to build a command-line application from scratch to manage a company's employee database, using Node.js, Inquirer, and MySQL.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monsosam/Project-12.git"
+  },
+  "author": "Samuel Monson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/monsosam/Project-12/issues"
+  },
+  "homepage": "https://github.com/monsosam/Project-12#readme",
+  "dependencies": {
+    "dotenv": "^16.4.2",
+    "inquirer": "^9.2.14",
+    "mysql2": "^3.9.1"
+  }
+}
