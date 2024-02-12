@@ -3,11 +3,18 @@ import inquirer from 'inquirer';
 import connection from './config/connection.js'; // Adjust the path as necessary
 import DatabaseQueries from './queries.js';
 
-// Create an instance of the DatabaseQueries class
-const dbQueries = new DatabaseQueries(connection);
+async function init() {
+  try {
+    const connection = await createConnection(); // Ensure this is awaited if it's async
+    const dbQueries = new DatabaseQueries(connection);
+    showMainMenu(dbQueries); // Pass dbQueries to use it in the function
+  } catch (error) {
+    console.error('Failed to initialize database connection:', error);
+  }
+}
 
 // Function to show the main menu
-function showMainMenu() {
+function showMainMenu(dbQueries) {
   inquirer.prompt([
     {
       type: 'list',
@@ -58,5 +65,5 @@ function showMainMenu() {
   }).catch(error => console.error('Error handling the main menu:', error));
 }
 
-// Start the application by showing the main menu
-showMainMenu();
+// Start the application
+init();
