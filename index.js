@@ -1,7 +1,7 @@
 // Import required modules
 import { prompt } from 'inquirer';
-import connection, { end, query } from '../config/connection'; // Adjust the path as necessary
-import DatabaseQueries from './queries';
+import connection from './config/connection.js'; // Adjust the path as necessary
+import DatabaseQueries from './queries.js';
 
 // Create an instance of the DatabaseQueries class
 const dbQueries = new DatabaseQueries(connection);
@@ -49,7 +49,7 @@ function showMainMenu() {
         break;
       case 'Exit':
         console.log('Exiting application...');
-        end();
+        connection.end()
         break;
       default:
         console.log('Invalid action!');
@@ -57,27 +57,6 @@ function showMainMenu() {
     }
   }).catch(error => console.error('Error handling the main menu:', error));
 }
-
-// Function implementations for database interactions
-// These functions should interact with the database and then call showMainMenu() again to return to the main menu
-
-async function viewAllDepartments() {
-    try {
-        // Execute the query to get all departments
-        const [departments] = await query('SELECT * FROM department ORDER BY id ASC');
-        console.table(departments); // Display the results in a table format
-        
-        // Call showMainMenu again to return to the main menu
-        // Ensure showMainMenu is accessible here; you might need to import or define it within scope
-        showMainMenu();
-      } catch (error) {
-        console.error('Error fetching departments:', error);
-        // Optionally, return to the main menu even in case of an error
-        showMainMenu();
-      }
-}
-
-// Implement other functions (addDepartment, viewAllRoles, etc.) similarly
 
 // Start the application by showing the main menu
 showMainMenu();
