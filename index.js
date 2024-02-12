@@ -1,5 +1,5 @@
 // Import required modules
-import { prompt } from 'inquirer';
+import inquirer from 'inquirer';
 import connection from './config/connection.js'; // Adjust the path as necessary
 import DatabaseQueries from './queries.js';
 
@@ -8,7 +8,7 @@ const dbQueries = new DatabaseQueries(connection);
 
 // Function to show the main menu
 function showMainMenu() {
-  prompt([
+  inquirer.prompt([
     {
       type: 'list',
       name: 'action',
