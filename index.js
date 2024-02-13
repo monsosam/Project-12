@@ -1,11 +1,11 @@
 // Import required modules
 import inquirer from 'inquirer';
-import connection from './config/connection.js'; // Adjust the path as necessary
+import initConnection from './config/connection.js'; // Adjust the path as necessary
 import DatabaseQueries from './queries.js';
 
 async function init() {
   try {
-    const connection = await createConnection(); // Ensure this is awaited if it's async
+    const connection = await initConnection(); // Ensure this is awaited if it's async
     const dbQueries = new DatabaseQueries(connection);
     showMainMenu(dbQueries); // Pass dbQueries to use it in the function
   } catch (error) {
