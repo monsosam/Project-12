@@ -13,6 +13,27 @@ async function init() {
   }
 }
 
+function promptAddDepartment(dbQueries) {
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'departmentName',
+      message: 'What is the name of the new department?',
+      validate: input => input ? true : 'Department name cannot be empty.'
+    }
+  ]).then(({ departmentName }) => {
+    dbQueries.addDepartment(departmentName)
+      .then(() => {
+        console.log(`Department added: ${departmentName}`);
+        showMainMenu(dbQueries); // Ensure to pass dbQueries back to showMainMenu
+      })
+      .catch(error => {
+        console.error('Error adding department:', error);
+        showMainMenu(dbQueries); // Ensure to pass dbQueries back to showMainMenu
+      });
+  });
+}
+
 // Function to show the main menu
 function showMainMenu(dbQueries) {
   inquirer.prompt([
@@ -34,10 +55,10 @@ function showMainMenu(dbQueries) {
   ]).then((answers) => {
     switch (answers.action) {
       case 'View all departments':
-        dbQueries.viewAllDepartments().then(showMainMenu);
+        dbQueries.viewAllDepartments().then(() => showMainMenu(dbQueries));
         break;
       case 'Add a department':
-        dbQueries.promptAddDepartment();
+        promptAddDepartment(dbQueries);
         break;
       case 'View all roles':
         dbQueries.viewAllRoles().then(showMainMenu);
