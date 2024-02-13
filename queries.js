@@ -82,6 +82,19 @@ class DatabaseQueries {
           console.error('Failed to update employee role:', error);
         }
     }
+
+    async getDepartmentsForChoices() {
+      try {
+          const [departments] = await this.connection.query('SELECT id, name FROM department');
+          return departments.map(department => ({
+              name: department.name,
+              value: department.id
+          }));
+      } catch (error) {
+          console.error('Failed to retrieve departments for choices:', error);
+          throw error; // Rethrow to allow calling code to handle it
+      }
+  }
 }
 
 async function promptAddRole() {
@@ -118,23 +131,6 @@ async function promptAddRole() {
     });
 }
 
-function promptAddDepartment() {
-    inquirer.prompt([
-      {
-        type: 'input',
-        name: 'departmentName',
-        message: 'What is the name of the new department?',
-        validate: input => input ? true : 'Department name cannot be empty.'
-      }
-    ]).then(({ departmentName }) => {
-      dbQueries.addDepartment(departmentName)
-        .then(() => showMainMenu())
-        .catch(error => {
-          console.error('Error adding department:', error);
-          showMainMenu();
-        });
-    });
-}
 
 async function promptAddEmployee() {
     // Fetch roles and managers for the user to choose from

@@ -34,6 +34,42 @@ function promptAddDepartment(dbQueries) {
   });
 }
 
+async function promptAddRole(dbQueries) {
+  // Assuming getDepartmentsForChoices() returns [{ name: 'Dept Name', value: deptId }, ...]
+  const departments = await dbQueries.getDepartmentsForChoices();
+
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'title',
+      message: 'What is the title of the new role?',
+      validate: input => input ? true : 'Role title cannot be empty.'
+    },
+    {
+      type: 'input',
+      name: 'salary',
+      message: 'What is the salary for the new role?',
+      validate: input => !isNaN(parseFloat(input)) && isFinite(input) ? true : 'Please enter a valid number.'
+    },
+    {
+      type: 'list',
+      name: 'departmentId',
+      message: 'Which department does the role belong to?',
+      choices: departments
+    }
+  ]).then(({ title, salary, departmentId }) => {
+    dbQueries.addRole(title, salary, departmentId)
+      .then(() => {
+        console.log(`Role added: ${title}`);
+        showMainMenu(dbQueries);
+      })
+      .catch(error => {
+        console.error('Error adding role:', error);
+        showMainMenu(dbQueries);
+      });
+  });
+}
+
 // Function to show the main menu
 function showMainMenu(dbQueries) {
   inquirer.prompt([
@@ -64,7 +100,7 @@ function showMainMenu(dbQueries) {
         dbQueries.viewAllRoles().then(showMainMenu);
         break;
       case 'Add a role':
-        dbQueries.promptAddRole();
+        promptAddRole(dbQueries);
         break;
       case 'View all employees':
         dbQueries.viewAllEmployees().then(showMainMenu);
