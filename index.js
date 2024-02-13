@@ -104,8 +104,12 @@ function showMainMenu(dbQueries) {
         break;
       case 'View all employees':
         dbQueries.viewAllEmployees().then(employees => {
-          showMainMenu(dbQueries)
-      }).catch(error => { console.error('Error fetching employees:', error); });
+          console.table(employees); // Display the employees data
+          showMainMenu(dbQueries); // Call showMainMenu after displaying the data
+        }).catch(error => {
+          console.error('Error fetching employees:', error);
+          showMainMenu(dbQueries);
+        });
         break;
       case 'Add an employee':
         dbQueries.promptAddEmployee();
