@@ -46,22 +46,15 @@ class DatabaseQueries {
     }
 
     async viewAllEmployees() {
-        try {
-          const query = `
-            SELECT e.id, e.first_name, e.last_name, 
-                   role.title, department.name AS department, 
-                   role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
-            FROM employee e
-            LEFT JOIN employee m ON e.manager_id = m.id
-            INNER JOIN role ON e.role_id = role.id
-            INNER JOIN department ON role.department_id = department.id
-            ORDER BY e.id ASC`;
-          const [employees] = await this.connection.query(query);
-          console.table(employees);
-        } catch (error) {
+      try {
+          const [employees] = await this.connection.query('SELECT * FROM employee');
+          // Process and return employees data as needed
+          return employees;
+      } catch (error) {
           console.error('Failed to retrieve employees:', error);
-        }
-    }
+          throw error; // Ensure errors are handled or logged
+      }
+  }
 
     async addEmployee(firstName, lastName, roleId, managerId) {
         try {

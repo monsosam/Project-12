@@ -103,7 +103,9 @@ function showMainMenu(dbQueries) {
         promptAddRole(dbQueries);
         break;
       case 'View all employees':
-        dbQueries.viewAllEmployees().then(showMainMenu);
+        dbQueries.viewAllEmployees().then(employees => {
+          showMainMenu(dbQueries)
+      }).catch(error => { console.error('Error fetching employees:', error); });
         break;
       case 'Add an employee':
         dbQueries.promptAddEmployee();
