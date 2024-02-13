@@ -70,6 +70,50 @@ async function promptAddRole(dbQueries) {
   });
 }
 
+async function promptAddEmployee(dbQueries) {
+  // Fetch roles and managers for the user to choose from
+  const roles = await dbQueries.getRolesForChoices(); // Assuming this method exists and returns [{ name: 'Role Name', value: roleId }, ...]
+  const managers = await dbQueries.getManagersForChoices(); // Similar assumption
+  managers.unshift({ name: 'None', value: null }); // Option for no manager
+
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'firstName',
+      message: "Employee's first name:",
+      validate: input => input ? true : 'First name cannot be empty.'
+    },
+    {
+      type: 'input',
+      name: 'lastName',
+      message: "Employee's last name:",
+      validate: input => input ? true : 'Last name cannot be empty.'
+    },
+    {
+      type: 'list',
+      name: 'roleId',
+      message: "Employee's role:",
+      choices: roles
+    },
+    {
+      type: 'list',
+      name: 'managerId',
+      message: "Employee's manager:",
+      choices: managers
+    }
+  ]).then(({ firstName, lastName, roleId, managerId }) => {
+    dbQueries.addEmployee(firstName, lastName, roleId, managerId)
+      .then(() => {
+        console.log(`Employee added: ${firstName} ${lastName}`);
+        showMainMenu(dbQueries);
+      })
+      .catch(error => {
+        console.error('Error adding employee:', error);
+        showMainMenu(dbQueries);
+      });
+  });
+}
+
 // Function to show the main menu
 function showMainMenu(dbQueries) {
   inquirer.prompt([
@@ -112,7 +156,7 @@ function showMainMenu(dbQueries) {
         });
         break;
       case 'Add an employee':
-        dbQueries.promptAddEmployee();
+        promptAddEmployee(dbQueries);
         break;
       case 'Update an employee role':
         dbQueries.updateEmployeeRole();

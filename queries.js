@@ -88,6 +88,33 @@ class DatabaseQueries {
           throw error; // Rethrow to allow calling code to handle it
       }
   }
+
+  async getRolesForChoices() {
+    try {
+        const [roles] = await this.connection.query('SELECT id, title FROM role');
+        return roles.map(role => ({
+            name: role.title, // Displayed in the prompt
+            value: role.id    // Used as the value when a role is selected
+        }));
+    } catch (error) {
+        console.error('Failed to retrieve roles:', error);
+        throw error;
+    }
+  }
+
+  async getManagersForChoices() {
+    try {
+        // Example query: adjust based on your schema, e.g., you might want to filter employees who can be managers
+        const [managers] = await this.connection.query('SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee WHERE manager_id IS NOT NULL OR manager_id IS NULL');
+        return managers.map(manager => ({
+            name: manager.name, // Displayed in the prompt
+            value: manager.id   // Used as the value when a manager is selected
+        }));
+    } catch (error) {
+        console.error('Failed to retrieve managers:', error);
+        throw error;
+    }
+  }
 }
 
 async function promptAddRole() {
