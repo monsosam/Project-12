@@ -1,7 +1,7 @@
 // Import required modules
 import inquirer from 'inquirer';
 import initConnection from './config/connection.js'; // Adjust the path as necessary
-import DatabaseQueries from './queries.js';
+import databaseQueries from './queries.js';
 import editorQueries from './editor.js'
 
 
@@ -33,11 +33,11 @@ function showMainMenu(db) {
     switch (answers.action) {
 
       case 'View all Departments':
-        DatabaseQueries.viewAllDepartments(db);
+        databaseQueries.viewAllDepartments(db);
         break;
 
       case 'View all roles':
-        DatabaseQueries.viewAllRoles(db);
+        databaseQueries.viewAllRoles(db);
         break;
 
       case 'View Employee Information':
@@ -79,27 +79,27 @@ function viewEmployeeInformation(dbQueries) {
   ]).then((answers) => {
     switch (answers.action) {
       case 'View all Employee Names':
-        DatabaseQueries.viewAllEmployeeNames(db);
+        databaseQueries.viewAllEmployeeNames(db);
         break;
 
       case 'View Employees by Role':
-        DatabaseQueries.viewEmployeeRole(db);
+        databaseQueries.viewEmployeeRole(db);
         break;
 
       case 'View Employees by Department':
-        DatabaseQueries.viewEmployeeDepartment(db);
+        databaseQueries.viewEmployeeDepartment(db);
         break;
 
       case 'View Employee Managers':
-        DatabaseQueries.viewEmployeeManager(db)
+        databaseQueries.viewEmployeeManager(db)
         break;
 
       case 'View Employee Salary':
-        DatabaseQueries.viewEmployeeSalary(db);
+        databaseQueries.viewEmployeeSalary(db);
         break;
 
       case 'View all Employee Information':
-        DatabaseQueries.viewEmployeeInfo(db);
+        databaseQueries.viewEmployeeInfo(db);
         break;
 
       case 'Exit':

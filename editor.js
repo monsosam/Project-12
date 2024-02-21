@@ -1,7 +1,18 @@
-const mysql = require('mysql2');
-const inquirer = require('inquirer'); // In order to install inquirer, please use npm i inquirer@8.2.4.
-const Table = require('cli-table3'); // https://www.npmjs.com/package/cli-table3
-require('dotenv').config();
+import mysql from "mysql2";
+import inquirer from "inquirer";
+import Table from "cli-table3"; // https://www.npmjs.com/package/cli-table3
+import dotenv from "dotenv";
+dotenv.config();
+
+const editorQueries = {
+  addDepartment,
+  addEmployee,
+  addRole,
+  updateEmployee,
+  removeDepartment,
+  removeEmployee,
+  removeRole,
+};
 
 // Add Employee
 function addEmployee(db) {
@@ -520,3 +531,5 @@ function removeDepartment(db) {
       });
   });
 }
+
+export default editorQueries;
