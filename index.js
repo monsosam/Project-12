@@ -2,175 +2,178 @@
 import inquirer from 'inquirer';
 import initConnection from './config/connection.js'; // Adjust the path as necessary
 import DatabaseQueries from './queries.js';
+import editorQueries from './editor.js'
+
 
 async function init() {
   try {
     const connection = await initConnection(); // Ensure this is awaited if it's async
-    const dbQueries = new DatabaseQueries(connection);
-    showMainMenu(dbQueries); // Pass dbQueries to use it in the function
+    showMainMenu(connection); // Pass dbQueries to use it in the function
   } catch (error) {
     console.error('Failed to initialize database connection:', error);
   }
 }
 
-function promptAddDepartment(dbQueries) {
-  inquirer.prompt([
-    {
-      type: 'input',
-      name: 'departmentName',
-      message: 'What is the name of the new department?',
-      validate: input => input ? true : 'Department name cannot be empty.'
-    }
-  ]).then(({ departmentName }) => {
-    dbQueries.addDepartment(departmentName)
-      .then(() => {
-        console.log(`Department added: ${departmentName}`);
-        showMainMenu(dbQueries); // Ensure to pass dbQueries back to showMainMenu
-      })
-      .catch(error => {
-        console.error('Error adding department:', error);
-        showMainMenu(dbQueries); // Ensure to pass dbQueries back to showMainMenu
-      });
-  });
-}
-
-async function promptAddRole(dbQueries) {
-  // Assuming getDepartmentsForChoices() returns [{ name: 'Dept Name', value: deptId }, ...]
-  const departments = await dbQueries.getDepartmentsForChoices();
-
-  inquirer.prompt([
-    {
-      type: 'input',
-      name: 'title',
-      message: 'What is the title of the new role?',
-      validate: input => input ? true : 'Role title cannot be empty.'
-    },
-    {
-      type: 'input',
-      name: 'salary',
-      message: 'What is the salary for the new role?',
-      validate: input => !isNaN(parseFloat(input)) && isFinite(input) ? true : 'Please enter a valid number.'
-    },
-    {
-      type: 'list',
-      name: 'departmentId',
-      message: 'Which department does the role belong to?',
-      choices: departments
-    }
-  ]).then(({ title, salary, departmentId }) => {
-    dbQueries.addRole(title, salary, departmentId)
-      .then(() => {
-        console.log(`Role added: ${title}`);
-        showMainMenu(dbQueries);
-      })
-      .catch(error => {
-        console.error('Error adding role:', error);
-        showMainMenu(dbQueries);
-      });
-  });
-}
-
-async function promptAddEmployee(dbQueries) {
-  // Fetch roles and managers for the user to choose from
-  const roles = await dbQueries.getRolesForChoices(); // Assuming this method exists and returns [{ name: 'Role Name', value: roleId }, ...]
-  const managers = await dbQueries.getManagersForChoices(); // Similar assumption
-  managers.unshift({ name: 'None', value: null }); // Option for no manager
-
-  inquirer.prompt([
-    {
-      type: 'input',
-      name: 'firstName',
-      message: "Employee's first name:",
-      validate: input => input ? true : 'First name cannot be empty.'
-    },
-    {
-      type: 'input',
-      name: 'lastName',
-      message: "Employee's last name:",
-      validate: input => input ? true : 'Last name cannot be empty.'
-    },
-    {
-      type: 'list',
-      name: 'roleId',
-      message: "Employee's role:",
-      choices: roles
-    },
-    {
-      type: 'list',
-      name: 'managerId',
-      message: "Employee's manager:",
-      choices: managers
-    }
-  ]).then(({ firstName, lastName, roleId, managerId }) => {
-    dbQueries.addEmployee(firstName, lastName, roleId, managerId)
-      .then(() => {
-        console.log(`Employee added: ${firstName} ${lastName}`);
-        showMainMenu(dbQueries);
-      })
-      .catch(error => {
-        console.error('Error adding employee:', error);
-        showMainMenu(dbQueries);
-      });
-  });
-}
-
 // Function to show the main menu
-function showMainMenu(dbQueries) {
+function showMainMenu(db) {
   inquirer.prompt([
     {
       type: 'list',
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        'View all departments',
-        'Add a department',
-        'View all roles',
-        'Add a role',
-        'View all employees',
-        'Add an employee',
-        'Update an employee role',
+        'View all Departments',
+        'View all Roles',
+        'View Employee Information',
+        'Edit Employee Database',
         'Exit'
       ]
     }
   ]).then((answers) => {
     switch (answers.action) {
-      case 'View all departments':
-        dbQueries.viewAllDepartments().then(() => showMainMenu(dbQueries));
+
+      case 'View all Departments':
+        DatabaseQueries.viewAllDepartments(db);
         break;
-      case 'Add a department':
-        promptAddDepartment(dbQueries);
-        break;
+
       case 'View all roles':
-        dbQueries.viewAllRoles().then(showMainMenu);
+        DatabaseQueries.viewAllRoles(db);
         break;
-      case 'Add a role':
-        promptAddRole(dbQueries);
+
+      case 'View Employee Information':
+        viewEmployeeInformation(db);
         break;
-      case 'View all employees':
-        dbQueries.viewAllEmployees().then(employees => {
-          console.table(employees); // Display the employees data
-          showMainMenu(dbQueries); // Call showMainMenu after displaying the data
-        }).catch(error => {
-          console.error('Error fetching employees:', error);
-          showMainMenu(dbQueries);
-        });
+
+      case 'Edit Employee Database':
+        editEmployeeDatabase(db);
         break;
-      case 'Add an employee':
-        promptAddEmployee(dbQueries);
-        break;
-      case 'Update an employee role':
-        dbQueries.updateEmployeeRole();
-        break;
+
       case 'Exit':
         console.log('Exiting application...');
         connection.end()
         break;
+
       default:
         console.log('Invalid action!');
-        showMainMenu(); // Show the menu again if the action is not recognized
+        showMainMenu(db); // Show the menu again if the action is not recognized
     }
   }).catch(error => console.error('Error handling the main menu:', error));
 }
+
+function viewEmployeeInformation(dbQueries) {
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to view?',
+      choices: [
+        'View all Employee Names',
+        'View Employees by Role',
+        'View Employees by Department',
+        'View Employee Managers',
+        'View Employee Salary',
+        'View all Employee Information',
+        'Exit'
+      ]
+    }
+  ]).then((answers) => {
+    switch (answers.action) {
+      case 'View all Employee Names':
+        DatabaseQueries.viewAllEmployeeNames(db);
+        break;
+
+      case 'View Employees by Role':
+        DatabaseQueries.viewEmployeeRole(db);
+        break;
+
+      case 'View Employees by Department':
+        DatabaseQueries.viewEmployeeDepartment(db);
+        break;
+
+      case 'View Employee Managers':
+        DatabaseQueries.viewEmployeeManager(db)
+        break;
+
+      case 'View Employee Salary':
+        DatabaseQueries.viewEmployeeSalary(db);
+        break;
+
+      case 'View all Employee Information':
+        DatabaseQueries.viewEmployeeInfo(db);
+        break;
+
+      case 'Exit':
+        console.log('Exiting...');
+        showMainMenu();
+        break;
+
+      default:
+        console.log('Invalide Choice!');
+        viewEmployeeInformation(db);
+    }
+  })
+  .catch(error => console.error('Error with User Inquirer', error));
+};
+
+function editEmployeeDatabase(db) {
+  inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: 'What would you like to Edit?',
+      choices: [
+        'Add Employee',
+        'Update Employee', 
+        'Remove Employee', 
+        'Add Role', 
+        'Remove Role', 
+        'Add Department', 
+        'Remove Department', 
+        'Exit'
+      ]
+    }
+  ]).then((answers) => {
+    switch (answers.action) {
+      case 'Add Employee':
+        editorQueries.addEmployee(db); // Replace with your operation to add an employee
+        break;
+
+      case 'Update Employee':
+        editorQueries.updateEmployee(db); // Replace with your action to update employee's data
+        break;
+
+      case 'Remove Employee':
+        editorQueries.removeEmployee(db); // Perform an employee removal task
+        break;
+
+      case 'Add Role':
+        editorQueries.addRole(db); // A mechanism to register a new role in the structure
+        break;
+
+      case 'Remove Role':
+        editorQueries.removeRole(db); // A task to take away an existing role from the status
+        break;
+
+      case 'Add Department':
+        editorQueries.addDepartment(db); // A technique to ensure a new division or arm
+        break;
+
+      case 'Remove Department':
+        editorQueries.removeDepartment(); // Remove a batch, part, or old management zone
+        break;
+
+      case 'Exit':
+        console.log('Exiting...');
+        showMainMenu(); // Function to present the main form of the role or type back
+        break;
+
+      default:
+        console.log('Invalid Choice!'); 
+        editEmployeeDatabase(db); // Possibly this gets back to the domain i.e., sends you to the method's sketch again
+    }
+  })
+  .catch(error => console.error('Error with Employee Database Edit Flow', error));
+};
 
 // Start the application
 init();

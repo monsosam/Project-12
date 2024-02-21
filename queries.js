@@ -1,122 +1,401 @@
-class DatabaseQueries {
-    constructor(connection) {
-      this.connection = connection;
-    }
-  
-    async viewAllDepartments() {
-      try {
-        const [rows] = await this.connection.query('SELECT * FROM department');
-        console.table(rows);
-      } catch (error) {
-        console.error('Failed to retrieve departments:', error);
+const mysql = require('mysql2');
+const inquirer = require('inquirer'); // In order to install inquirer, please use npm i inquirer@8.2.4.
+const Table = require('cli-table3'); // https://www.npmjs.com/package/cli-table3
+require('dotenv').config();
+
+function viewAllDepartments(db) {
+  // Query to fetch all departments
+  db.query(
+    "SELECT id, dept_name as Department " + "FROM departments " + "ORDER BY id",
+    function (err, results) {
+      if (err) {
+        console.error("Error querying departments:", err);
+        return;
       }
-    }
-  
-    async addDepartment(departmentName) {
-      try {
-        const [result] = await this.connection.query('INSERT INTO department (name) VALUES (?)', [departmentName]);
-        console.log(`Added department: ${departmentName}`);
-      } catch (error) {
-        console.error('Failed to add department:', error);
-      }
-    }
-  
-    async viewAllRoles() {
-        try {
-          const query = `
-            SELECT role.id, role.title, department.name AS department, role.salary
-            FROM role
-            INNER JOIN department ON role.department_id = department.id
-            ORDER BY role.id ASC`;
-          const [roles] = await this.connection.query(query);
-          console.table(roles);
-        } catch (error) {
-          console.error('Failed to retrieve roles:', error);
-        }
-    }
 
-    async addRole(title, salary, departmentId) {
-        try {
-          const query = 'INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)';
-          const [result] = await this.connection.query(query, [title, salary, departmentId]);
-          console.log(`Added role: ${title}`);
-        } catch (error) {
-          console.error('Failed to add role:', error);
-        }
+      // Display departments in a table
+      const table = new Table({
+        head: ["ID", "Department"],
+        colWidths: [5, 20],
+      });
+
+      results.forEach(({ id, Department }) => {
+        table.push([id, Department]);
+      });
+
+      console.log(table.toString());
+
     }
-
-    async viewAllEmployees() {
-      try {
-          const [employees] = await this.connection.query('SELECT * FROM employee');
-          // Process and return employees data as needed
-          return employees;
-      } catch (error) {
-          console.error('Failed to retrieve employees:', error);
-          throw error; // Ensure errors are handled or logged
-      }
-  }
-
-    async addEmployee(firstName, lastName, roleId, managerId) {
-        try {
-          const query = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)';
-          const [result] = await this.connection.query(query, [firstName, lastName, roleId, managerId]);
-          console.log(`Added employee: ${firstName} ${lastName}`);
-        } catch (error) {
-          console.error('Failed to add employee:', error);
-        }
-    }
-
-    async updateEmployeeRole(employeeId, newRoleId) {
-        try {
-          const query = 'UPDATE employee SET role_id = ? WHERE id = ?';
-          const [result] = await this.connection.query(query, [newRoleId, employeeId]);
-          console.log(`Updated employee's role. Employee ID: ${employeeId}, New Role ID: ${newRoleId}`);
-        } catch (error) {
-          console.error('Failed to update employee role:', error);
-        }
-    }
-
-    async getDepartmentsForChoices() {
-      try {
-          const [departments] = await this.connection.query('SELECT id, name FROM department');
-          return departments.map(department => ({
-              name: department.name,
-              value: department.id
-          }));
-      } catch (error) {
-          console.error('Failed to retrieve departments for choices:', error);
-          throw error; // Rethrow to allow calling code to handle it
-      }
-  }
-
-  async getRolesForChoices() {
-    try {
-        const [roles] = await this.connection.query('SELECT id, title FROM role');
-        return roles.map(role => ({
-            name: role.title, // Displayed in the prompt
-            value: role.id    // Used as the value when a role is selected
-        }));
-    } catch (error) {
-        console.error('Failed to retrieve roles:', error);
-        throw error;
-    }
-  }
-
-  async getManagersForChoices() {
-    try {
-        // Example query: adjust based on your schema, e.g., you might want to filter employees who can be managers
-        const [managers] = await this.connection.query('SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee WHERE manager_id IS NOT NULL OR manager_id IS NULL');
-        return managers.map(manager => ({
-            name: manager.name, // Displayed in the prompt
-            value: manager.id   // Used as the value when a manager is selected
-        }));
-    } catch (error) {
-        console.error('Failed to retrieve managers:', error);
-        throw error;
-    }
-  }
+  );
 }
 
+// View all Roles
+function viewAllRoles(db) {
+  db.query(
+    "SELECT ro.id, ro.title, ro.salary, de.dept_name as Department " +
+      "FROM roles ro " +
+      "JOIN departments de ON ro.department_id = de.id " +
+      "ORDER BY ro.id",
+    function (err, results) {
+      if (err) {
+        console.error("Error querying roles:", err);
+        return;
+      }
 
-export default DatabaseQueries;
-  
+      // Display roles in a table
+      const table = new Table({
+        head: ["ID", "Title", "Salary", "Department"],
+        colWidths: [5, 20, 15, 20],
+      });
+
+      results.forEach(({ id, title, salary, Department }) => {
+        table.push([id, title, salary, Department]);
+      });
+
+      console.log(table.toString());
+    }
+  );
+}
+
+// View All Employees
+function viewAllEmployeeNames(db) {
+  // Adjusted query to fetch only id, last_name, and first_name
+  db.query(
+    "SELECT em.id, em.first_name, em.last_name " +
+      "FROM employees em " +
+      "ORDER BY em.id",
+    function (err, results) {
+      if (err) {
+        console.error("Error querying the database:", err);
+        return;
+      }
+
+      // Adjusted table to display only ID, First Name, and Last Name
+      const table = new Table({
+        head: ["ID", "First Name", "Last Name"],
+        colWidths: [5, 15, 15], // Adjust column widths as needed
+      });
+
+      results.forEach(({ id, first_name, last_name }) => {
+        table.push([id, first_name, last_name]);
+      });
+
+      console.log(table.toString());
+      init();
+    }
+  );
+}
+
+// View Employees by Manager
+function viewEmployeeManager(db) {
+  db.query(
+    'SELECT DISTINCT manager.id, CONCAT(manager.first_name, " ", manager.last_name) AS manager_name ' +
+      "FROM employees manager " +
+      "JOIN employees em ON manager.id = em.manager_id",
+    function (err, managers) {
+      if (err) {
+        console.error("Error fetching managers:", err);
+        return;
+      }
+
+      // Prompt user to select a manager
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "manager_id",
+            message: "Select the manager:",
+            choices: managers.map((manager) => ({
+              name: manager.manager_name,
+              value: manager.id,
+            })),
+          },
+        ])
+        .then((answer) => {
+          db.query(
+            "SELECT em.id, em.first_name, em.last_name, ro.title, de.dept_name, ro.salary, " +
+              'IFNULL(CONCAT(manager.first_name, " ", manager.last_name), "N/A") AS manager ' +
+              "FROM employees em " +
+              "JOIN roles ro ON em.role_id = ro.id " +
+              "JOIN departments de ON ro.department_id = de.id " +
+              "LEFT JOIN employees manager ON em.manager_id = manager.id " +
+              "WHERE em.manager_id = ? " +
+              "ORDER BY em.id",
+            [answer.manager_id],
+            function (err, results) {
+              if (err) {
+                console.error("Error querying the database:", err);
+                return;
+              }
+
+              // Display employees under the selected manager in a table
+              const table = new Table({
+                head: [
+                  "ID",
+                  "First Name",
+                  "Last Name",
+                  "Title",
+                  "Department",
+                  "Salary",
+                  "Manager",
+                ],
+                colWidths: [5, 15, 15, 20, 15, 10, 20],
+              });
+
+              results.forEach(
+                ({
+                  id,
+                  first_name,
+                  last_name,
+                  title,
+                  dept_name,
+                  salary,
+                  manager,
+                }) => {
+                  table.push([
+                    id,
+                    first_name,
+                    last_name,
+                    title,
+                    dept_name,
+                    salary,
+                    manager,
+                  ]);
+                }
+              );
+
+              console.log(table.toString());
+            }
+          );
+        });
+    }
+  );
+}
+
+// View Employees by Department
+function viewEmployeeDepartment(db) {
+  // Fetch departments from the database
+  db.query(
+    "SELECT id, dept_name FROM departments",
+    function (err, departments) {
+      if (err) {
+        console.error("Error fetching departments:", err);
+        return;
+      }
+
+      // Prompt user to select a department
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "department_id",
+            message: "Select the department:",
+            choices: departments.map((department) => ({
+              name: department.dept_name,
+              value: department.id,
+            })),
+          },
+        ])
+        .then((answer) => {
+          // Query to fetch employees in the selected department
+          db.query(
+            "SELECT em.id, em.first_name, em.last_name, ro.title, de.dept_name, ro.salary, " +
+              'IFNULL(CONCAT(manager.first_name, " ", manager.last_name), "N/A") AS manager ' +
+              "FROM employees em " +
+              "JOIN roles ro ON em.role_id = ro.id " +
+              "JOIN departments de ON ro.department_id = de.id " +
+              "LEFT JOIN employees manager ON em.manager_id = manager.id " +
+              "WHERE ro.department_id = ? " +
+              "ORDER BY em.id",
+            [answer.department_id],
+            function (err, results) {
+              if (err) {
+                console.error("Error querying the database:", err);
+                return;
+              }
+
+              // Display employees in the selected department in a table
+              const table = new Table({
+                head: [
+                  "ID",
+                  "First Name",
+                  "Last Name",
+                  "Title",
+                  "Department",
+                  "Salary",
+                  "Manager",
+                ],
+                colWidths: [5, 15, 15, 20, 15, 10, 20],
+              });
+
+              results.forEach(
+                ({
+                  id,
+                  first_name,
+                  last_name,
+                  title,
+                  dept_name,
+                  salary,
+                  manager,
+                }) => {
+                  table.push([
+                    id,
+                    first_name,
+                    last_name,
+                    title,
+                    dept_name,
+                    salary,
+                    manager,
+                  ]);
+                }
+              );
+
+              console.log(table.toString());
+            }
+          );
+        });
+    }
+  );
+}
+
+// View Employees by Role
+function viewEmployeeRole(db) {
+  // Fetch roles from the database
+  db.query("SELECT id, title FROM roles", function (err, roles) {
+    if (err) {
+      console.error("Error fetching roles:", err);
+      return;
+    }
+
+    // Prompt user to select a role
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "role_id",
+          message: "Select the role:",
+          choices: roles.map((role) => ({
+            name: role.title,
+            value: role.id,
+          })),
+        },
+      ])
+      .then((answer) => {
+        // Query to fetch employees in the selected role
+        db.query(
+          "SELECT em.id, em.first_name, em.last_name, ro.title, " +
+            'IFNULL(CONCAT(manager.first_name, " ", manager.last_name), "N/A") AS manager, ro.salary ' +
+            "FROM employees em " +
+            "JOIN roles ro ON em.role_id = ro.id " +
+            "LEFT JOIN employees manager ON em.manager_id = manager.id " +
+            "WHERE em.role_id = ? " +
+            "ORDER BY em.id",
+          [answer.role_id],
+          function (err, results) {
+            if (err) {
+              console.error("Error querying the database:", err);
+              return;
+            }
+
+            // Display employees in the selected role in a table
+            const table = new Table({
+              head: [
+                "ID",
+                "First Name",
+                "Last Name",
+                "Title",
+                "Salary",
+                "Manager",
+              ],
+              colWidths: [5, 15, 15, 20, 10, 20],
+            });
+
+            results.forEach(
+              ({ id, first_name, last_name, title, salary, manager }) => {
+                table.push([id, first_name, last_name, title, salary, manager]);
+              }
+            );
+
+            console.log(table.toString());
+          }
+        );
+      });
+  });
+}
+
+// View All Employees
+function viewAllEmployeeSalary(db) {
+  db.query(
+    "SELECT em.first_name, em.last_name, ro.salary " +
+      "FROM employees em " +
+      "JOIN roles ro ON em.role_id = ro.id " +
+      "ORDER BY em.id",
+    function (err, results) {
+      if (err) {
+        console.error("Error querying the database:", err);
+        return;
+      }
+
+      // Adjusted table to display only First Name, Last Name, and Salary
+      const table = new Table({
+        head: ["First Name", "Last Name", "Salary"],
+        colWidths: [15, 15, 10],
+      });
+
+      results.forEach(({ first_name, last_name, salary }) => {
+        table.push([first_name, last_name, salary]);
+      });
+
+      console.log(table.toString());
+    }
+  );
+}
+
+function viewEmployeeInfo(db) {
+  // Query to fetch all employee details
+  db.query(
+    "SELECT em.id, em.first_name, em.last_name, ro.title, de.dept_name, ro.salary, " +
+      'IFNULL(CONCAT(manager.first_name, " ", manager.last_name), "N/A") AS manager ' +
+      "FROM employees em " +
+      "JOIN roles ro ON em.role_id = ro.id " +
+      "JOIN departments de ON ro.department_id = de.id " +
+      "LEFT JOIN employees manager ON em.manager_id = manager.id " +
+      "ORDER BY em.id",
+    function (err, results) {
+      if (err) {
+        console.error("Error querying the database:", err);
+        return;
+      }
+
+      // Display employee details in a table
+      const table = new Table({
+        head: [
+          "ID",
+          "First Name",
+          "Last Name",
+          "Title",
+          "Department",
+          "Salary",
+          "Manager",
+        ],
+        colWidths: [5, 15, 15, 20, 15, 10, 20],
+      });
+
+      results.forEach(
+        ({ id, first_name, last_name, title, dept_name, salary, manager }) => {
+          table.push([
+            id,
+            first_name,
+            last_name,
+            title,
+            dept_name,
+            salary,
+            manager,
+          ]);
+        }
+      );
+
+      console.log(table.toString());
+    }
+  );
+}

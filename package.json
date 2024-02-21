@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/monsosam/Project-12#readme",
   "dependencies": {
+    "cli-table3": "^0.6.3",
     "dotenv": "^16.4.2",
     "inquirer": "^9.2.14",
     "mysql2": "^3.9.1"
